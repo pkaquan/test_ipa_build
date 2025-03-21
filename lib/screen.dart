@@ -13,11 +13,16 @@ class _ScreenState extends State<Screen> {
   double _currentSlideValue = 0;
   List<int> timeduring = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   int? onSelect;
+  bool switchButton = false;
+
+
+
 
   void speedMotor() async {
     await FirebaseFirestore.instance.collection('EspData').doc('MOTOR').set({
-      'speed durring': _currentSlideValue,
+      'speed durring': (((_currentSlideValue.toInt()) * 1023) / 100).toInt(),
       'time durring': onSelect,
+      'switch': switchButton,
     });
   }
 
@@ -29,6 +34,7 @@ class _ScreenState extends State<Screen> {
         backgroundColor: Colors.blue,
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text('Tốc độ bơm', style: TextStyle(fontSize: 26)),
           Text('${_currentSlideValue.round()}', style: TextStyle(fontSize: 80)),
@@ -41,6 +47,46 @@ class _ScreenState extends State<Screen> {
                 _currentSlideValue = value;
               });
             },
+          ),
+          SizedBox(height: 20),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Text("Trạng thái : ", style: TextStyle(fontSize: 20)),
+                SizedBox(
+                  width: 200,
+                  child: StreamBuilder<DocumentSnapshot>(
+                    stream:
+                        FirebaseFirestore.instance
+                            .collection('EspData')
+                            .doc('MOTOR')
+                            .snapshots(),
+                    builder: (context, snapshot) {
+                      var data = snapshot.data?.data() as Map<String, dynamic>?;
+                      bool getSwitchButton = data?['switch'] as bool? ?? false;
+                      return Text(
+                        getSwitchButton ? "Bơm đang chạy" : "Bơm đã tắt",
+                        
+                        style: TextStyle(fontSize: 20),
+                      );
+                    },
+                  ),
+                ),
+
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Switch(
+                    value: switchButton,
+                    onChanged: (value) {
+                      setState(() {
+                        switchButton = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(height: 20),
           Container(
